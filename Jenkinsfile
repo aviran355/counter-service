@@ -26,6 +26,23 @@ pipeline {
             }
         }
         
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                script {
+                    def dockerImage = "${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+                    
+                    // Tag the Docker image with Docker Hub repository
+                    sh "docker tag ${dockerImage} ${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+                    
+                    // Login to Docker Hub
+                    withDockerRegistry(credentialsId: DOCKER_CREDENTIALS_ID, url: 'https://index.docker.io/v1/') {
+                        // Push the Docker image to Docker Hub
+                        sh "docker push ${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+        
         stage('Deploy and Run') {
             steps {
                 script {
