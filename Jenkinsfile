@@ -74,12 +74,5 @@ pipeline {
                 }
             }
         }
-        stage('Send POST Request') {
-            steps {
-                script {
-                    sh 'curl -X POST http://ec2-18-159-208-86.eu-central-1.compute.amazonaws.com/'
-                }
-            }
-        }
     }
 }
