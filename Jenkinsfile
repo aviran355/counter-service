@@ -6,19 +6,22 @@ pipeline {
         string(name: 'URL', defaultValue: 'https://github.com/aviran355/counter-service.git', description: 'Git repository URL')
     }
     
+    environment {
+        DOCKER_CREDENTIALS_ID = 'd13d2dcd-466d-466c-85db-430b46f34af9'
+        DOCKER_HUB_REPO = 'aviranmashiach/counterproject'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    git branch: params.BRANCH, url: params.URL, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
-                }
+                git branch: params.BRANCH, url: params.URL, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
             }
         }
         
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("counterapp:${env.BUILD_NUMBER}")
+                    docker.build("${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -27,28 +30,23 @@ pipeline {
             steps {
                 script {
                     def branch = params.BRANCH
-                    def imageName = "counterapp:${env.BUILD_NUMBER}"
-            
+                    def imageName = "${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+                    
                     // Pull the Docker image
-                    docker.image(imageName).pull()
-            
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        docker.image(imageName).pull()
+                    }
+                    
                     // Stop and remove any existing containers with the same name
                     sh "docker stop counter-service || true"
                     sh "docker rm counter-service || true"
-            
+                    
                     // Run the Docker container
-                    def dockerRunCommand = "docker run -d --name counter-service -p 80:5000 ${imageName}"
-                    def dockerRunStatus = sh(script: dockerRunCommand, returnStatus: true)
-            
-                    if (dockerRunStatus == 0) {
-                        echo 'Docker container started successfully.'
-                    } else {
-                        error 'Failed to start Docker container.'
-                    }
-            
+                    docker.image(imageName).run("-d --name counter-service -p 80:5000")
+                    
                     // Wait for the container to start
                     sh 'sleep 10'
-            
+                    
                     // Check if the service is ready
                     def serviceReady = sh(script: 'curl -s http://ec2-18-159-208-86.eu-central-1.compute.amazonaws.com/ | grep "POST request count"', returnStatus: true) == 0
                     if (serviceReady) {
@@ -59,7 +57,5 @@ pipeline {
                 }
             }
         }
-
     }
 }
-
