@@ -2,13 +2,14 @@ pipeline {
     agent any
     
     parameters {
-        string(name: 'BRANCH', defaultValue: 'develop', description: 'Branch to deploy')
+        string(name: 'BRANCH', defaultValue: 'develop', description: 'Branch to build')
+        string(name: 'URL', defaultValue: 'https://github.com/aviran355/counter-service.git', description: 'Git repository URL')
     }
     
     stages {
         stage('Checkout') {
             steps {
-                git branch: params.BRANCH, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
+                git branch: params.BRANCH, url: params.URL, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
             }
         }
         
