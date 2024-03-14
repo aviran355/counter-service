@@ -9,7 +9,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: params.BRANCH, url: params.URL, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
+                script {
+                    git branch: params.BRANCH, url: params.URL, credentialsId: '01df9c87-6980-44c6-bcac-1cc01e3f2c38'
+                }
             }
         }
         
